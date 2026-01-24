@@ -1,65 +1,202 @@
-import Image from "next/image";
+"use client";
+
+import { Dithering } from '@paper-design/shaders-react';
+import { useTheme } from 'next-themes';
+import { useIsMobile } from '@/hooks/use-mobile';
+import TypingText from '@/components/ui/typing-text';
+import { ButtonGroup } from '@/components/ui/button-group';
+import { Button } from '@/components/ui/button';
+import { FaArrowDown, FaGithub, FaLinkedin } from "react-icons/fa6";
+import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ChevronsDownIcon } from 'lucide-react';
+import { Shimmer } from '@/components/ai-elements/shimmer';
+import { cn } from '@/lib/utils';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
+  const isMobile = useIsMobile()
+  const { theme } = useTheme();
+  const ditheringRef = useRef(null);
+  const chevronRef = useRef(null);
+  const triggerRef = useRef(null);
+  const triggerPart1Ref = useRef(null);
+  const triggerPart2Ref = useRef(null);
+  const part1DivRef = useRef(null);
+  const part2DivRef = useRef(null);
+  const [ditheringHeight, setDitheringHeight] = useState(520);
+  const [windowHeight, setWindowHeight] = useState(0);
+
+
+  useEffect(() => {
+    // Set initial window height
+    setWindowHeight(window.innerHeight);
+
+    // Update window height on resize
+    const handleResize = () => setWindowHeight(window.innerHeight);
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (windowHeight === 0) return; // Wait for initial window height
+
+    // Calculate heights as a ratio of viewport height
+    // Desktop: ~48% of viewport height, Mobile: ~50% of viewport height
+    const initialHeightRatio = isMobile ? 0.5 : 0.42;
+    const minHeightRatio = isMobile ? 0.12 : 0.185;
+
+    const initialHeight = Math.round(windowHeight * initialHeightRatio);
+    const minHeight = Math.round(windowHeight * minHeightRatio);
+    setDitheringHeight(initialHeight);
+
+    const ctx = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: document.body,
+        start: "top top",
+        end: "+=500",
+        scrub: 1,
+        onUpdate: (self) => {
+          const progress = self.progress;
+          const newHeight = initialHeight - (initialHeight - minHeight) * progress;
+          setDitheringHeight(newHeight);
+        }
+      });
+
+      // Fade out chevron on scroll
+      if (chevronRef.current) {
+        gsap.to(chevronRef.current, {
+          opacity: 0,
+          display: "none",
+          scrollTrigger: {
+            trigger: document.body,
+            start: "top top",
+            end: "+=200",
+            scrub: 1,
+          },
+
+        });
+
+      }
+
+      // Show part 1 when trigger-part-1 becomes predominant
+      if (triggerPart1Ref.current && part1DivRef.current && part2DivRef.current) {
+        ScrollTrigger.create({
+          trigger: triggerPart1Ref.current,
+          start: "top center",
+          end: "bottom center",
+          onEnter: () => {
+            gsap.to(part1DivRef.current, { opacity: 1, duration: 0.3 });
+            gsap.to(part2DivRef.current, { opacity: 0, duration: 0.3 });
+
+          },
+          onEnterBack: () => {
+            gsap.to(part1DivRef.current, { opacity: 1, duration: 0.3 });
+            gsap.to(part2DivRef.current, { opacity: 0, duration: 0.3 });
+
+          },
+
+          onLeave: () => {
+            gsap.to(part1DivRef.current, { opacity: 0, duration: 0.3 });
+          },
+          onLeaveBack: () => {
+            gsap.to(part1DivRef.current, { opacity: 0, duration: 0.3 });
+          }
+        });
+      }
+
+      // Show part 2 when trigger-part-2 becomes predominant
+      if (triggerPart2Ref.current && part2DivRef.current && part1DivRef.current) {
+        ScrollTrigger.create({
+          trigger: triggerPart2Ref.current,
+          start: "top center",
+          end: "bottom center",
+          onEnter: () => {
+            gsap.to(part2DivRef.current, { opacity: 1, duration: 0.3 });
+            gsap.to(part1DivRef.current, { opacity: 0, duration: 0.3 });
+          },
+          onEnterBack: () => {
+
+            gsap.to(part2DivRef.current, { opacity: 1, duration: 0.3 });
+            gsap.to(part1DivRef.current, { opacity: 0, duration: 0.3 });
+          },
+          onLeave: () => {
+            gsap.to(part2DivRef.current, { opacity: 0, duration: 0.3 });
+          },
+          onLeaveBack: () => {
+            gsap.to(part2DivRef.current, { opacity: 0, duration: 0.3 });
+          }
+        });
+      }
+    });
+
+    return () => ctx.revert();
+  }, [isMobile, windowHeight]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <div className="flex min-h-screen items-center justify-center font-sans dark:bg-black">
+      <main className="flex min-h-screen md:max-w-4xl w-full flex-col items-center justify-between pb-32 px-10 bg-white dark:bg-black sm:items-start relative">
+        <div className='sticky top-0 w-full z-50 bg-white dark:bg-black '>
+          <div className={cn('bottom-0 left-0 w-full flex flex-row items-center py-10 bg-transparent', isMobile ? 'pt-10' : 'pt-16')}>
+            <TypingText
+              finalText="JOEN TAN"
+              className='font-mono text-xl '
+              cursorCharacter='_'
+              text={["JOEN TAN", "SOFTWARE ENGINEER", "AI ENTHUSIAST"]}
+              loop={false}
+
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <div className="ml-auto flex">
+              <ButtonGroup>
+                <Link href="https://github.com/joentze">
+                  <Button variant={'ghost'} size={'icon'}>
+                    <FaGithub className='size-4' />
+                  </Button>
+                </Link>
+                <Link href="https://www.linkedin.com/in/joen-tan/">
+                  <Button variant={'ghost'} size={'icon'}>
+                    <FaLinkedin className='size-4' />
+                  </Button>
+                </Link>
+              </ButtonGroup>
+            </div>
+          </div>
+          <Dithering
+            ref={ditheringRef}
+            width={"100%"}
+            height={ditheringHeight}
+            colorBack={theme === "dark" ? "#000000" : "#F7F7F7"}
+            colorFront={theme === "dark" ? "#EBEBEB" : "#343434"}
+            shape="warp"
+            type="4x4"
+            size={2.5}
+            speed={0.62}
+          />
+          <div ref={chevronRef} className='w-full flex flex-col justify-center items-center gap-6 pt-8'>
+            <p className='justify text-muted-foreground'>
+              I'm deeply passionate about building cool products with extraordinary impact. I strive to build products that are beautiful & functional.
+            </p>
+            <p className='text-xs text-muted-foreground flex items-center gap-2 '><ChevronsDownIcon className='size-4' />
+              <Shimmer
+                duration={8}
+              >
+                SEE EXPERIENCES
+              </Shimmer>
+            </p>
+
+          </div>
+          <div ref={part1DivRef} className='absolute w-full h-1 bg-red-500 mt-8' style={{ opacity: 0 }}></div>
+          <div ref={part2DivRef} className='absolute w-full h-1 bg-blue-500 mt-8' style={{ opacity: 0 }}></div>
         </div>
-      </main>
-    </div>
+        <div ref={triggerPart1Ref} className='h-screen' id="trigger-part-1">
+        </div>
+        <div ref={triggerPart2Ref} className='h-screen' id="trigger-part-2">
+        </div>
+      </main >
+    </div >
   );
 }
