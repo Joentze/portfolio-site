@@ -4,7 +4,6 @@ export const title = "Typing Text"
 
 import { gsap } from "gsap"
 import {
-    createElement,
     type ElementType,
     useCallback,
     useEffect,
@@ -221,27 +220,27 @@ const TypingText = ({
     // Hide cursor when loop is complete and final text is done (or no final text)
     const isTypingComplete = loopComplete && (!finalText || currentCharIndex >= finalText.length)
 
-    return createElement(
-        Component,
-        {
-            ref: containerRef,
-            className: `inline-block whitespace-pre-wrap tracking-tight ${className}`,
-            ...props,
-        },
-        <span className="inline" style={{ color: getCurrentTextColor() }}>
-            {displayedText}
-        </span>,
-        showCursor && !isTypingComplete && (
-            <span
-                className={`inline-block opacity-100 ${shouldHideCursor ? "hidden" : ""} ${cursorCharacter === "|"
-                    ? `h-5 w-[1px] translate-y-1 bg-foreground ${cursorClassName}`
-                    : `ml-1 ${cursorClassName}`
-                    }`}
-                ref={cursorRef}
-            >
-                {cursorCharacter === "|" ? "" : cursorCharacter}
+    return (
+        <Component
+            ref={containerRef}
+            className={`inline-block whitespace-pre-wrap tracking-tight ${className}`}
+            {...props}
+        >
+            <span className="inline" style={{ color: getCurrentTextColor() }}>
+                {displayedText}
             </span>
-        ),
+            {showCursor && !isTypingComplete && (
+                <span
+                    className={`inline-block opacity-100 ${shouldHideCursor ? "hidden" : ""} ${cursorCharacter === "|"
+                        ? `h-5 w-[1px] translate-y-1 bg-foreground ${cursorClassName}`
+                        : `ml-1 ${cursorClassName}`
+                        }`}
+                    ref={cursorRef}
+                >
+                    {cursorCharacter === "|" ? "" : cursorCharacter}
+                </span>
+            )}
+        </Component>
     )
 }
 

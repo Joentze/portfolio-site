@@ -6,7 +6,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import TypingText from '@/components/ui/typing-text';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Button } from '@/components/ui/button';
-import { FaArrowDown, FaGithub, FaLinkedin } from "react-icons/fa6";
+import { FaGithub, FaLinkedin } from "react-icons/fa6";
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
@@ -14,23 +14,33 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronsDownIcon } from 'lucide-react';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { cn } from '@/lib/utils';
+import Experience from '@/components/parts/experience';
+import Skills from '@/components/parts/skills';
+import Projects from '@/components/parts/projects';
+import Blog from '@/components/parts/blog';
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Define your parts configuration here
+
 
 export default function Home() {
   const isMobile = useIsMobile()
   const { theme } = useTheme();
   const ditheringRef = useRef(null);
   const chevronRef = useRef(null);
-  const triggerRef = useRef(null);
-  const triggerPart1Ref = useRef(null);
-  const triggerPart2Ref = useRef(null);
-  const part1DivRef = useRef(null);
-  const part2DivRef = useRef(null);
   const [ditheringHeight, setDitheringHeight] = useState(520);
   const [windowHeight, setWindowHeight] = useState(0);
 
 
+  // Create refs dynamically for all parts
+  const triggerRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null]);
+  const [activePart, setActivePart] = useState<number | null>(null);
+
+  // Scroll to part function
+  const scrollToPart = (index: number) => {
+    triggerRefs.current[index]?.scrollIntoView({ behavior: 'smooth' });
+  };
   useEffect(() => {
     // Set initial window height
     setWindowHeight(window.innerHeight);
@@ -75,62 +85,36 @@ export default function Home() {
           scrollTrigger: {
             trigger: document.body,
             start: "top top",
-            end: "+=200",
+            end: "+=80",
             scrub: 1,
           },
-
-        });
-
-      }
-
-      // Show part 1 when trigger-part-1 becomes predominant
-      if (triggerPart1Ref.current && part1DivRef.current && part2DivRef.current) {
-        ScrollTrigger.create({
-          trigger: triggerPart1Ref.current,
-          start: "top center",
-          end: "bottom center",
-          onEnter: () => {
-            gsap.to(part1DivRef.current, { opacity: 1, duration: 0.3 });
-            gsap.to(part2DivRef.current, { opacity: 0, duration: 0.3 });
-
-          },
-          onEnterBack: () => {
-            gsap.to(part1DivRef.current, { opacity: 1, duration: 0.3 });
-            gsap.to(part2DivRef.current, { opacity: 0, duration: 0.3 });
-
-          },
-
-          onLeave: () => {
-            gsap.to(part1DivRef.current, { opacity: 0, duration: 0.3 });
-          },
-          onLeaveBack: () => {
-            gsap.to(part1DivRef.current, { opacity: 0, duration: 0.3 });
-          }
         });
       }
 
-      // Show part 2 when trigger-part-2 becomes predominant
-      if (triggerPart2Ref.current && part2DivRef.current && part1DivRef.current) {
-        ScrollTrigger.create({
-          trigger: triggerPart2Ref.current,
-          start: "top center",
-          end: "bottom center",
-          onEnter: () => {
-            gsap.to(part2DivRef.current, { opacity: 1, duration: 0.3 });
-            gsap.to(part1DivRef.current, { opacity: 0, duration: 0.3 });
-          },
-          onEnterBack: () => {
+      // Set up ScrollTriggers for all parts dynamically
+      const partsCount = 4;
+      for (let index = 0; index < partsCount; index++) {
+        const triggerEl = triggerRefs.current[index];
 
-            gsap.to(part2DivRef.current, { opacity: 1, duration: 0.3 });
-            gsap.to(part1DivRef.current, { opacity: 0, duration: 0.3 });
-          },
-          onLeave: () => {
-            gsap.to(part2DivRef.current, { opacity: 0, duration: 0.3 });
-          },
-          onLeaveBack: () => {
-            gsap.to(part2DivRef.current, { opacity: 0, duration: 0.3 });
-          }
-        });
+        if (triggerEl) {
+          ScrollTrigger.create({
+            trigger: triggerEl,
+            start: "top center",
+            end: "bottom center",
+            onEnter: () => {
+              setActivePart(index);
+            },
+            onEnterBack: () => {
+              setActivePart(index);
+            },
+            onLeave: () => {
+              setActivePart(null);
+            },
+            onLeaveBack: () => {
+              setActivePart(null);
+            }
+          });
+        }
       }
     });
 
@@ -153,12 +137,12 @@ export default function Home() {
             <div className="ml-auto flex">
               <ButtonGroup>
                 <Link href="https://github.com/joentze">
-                  <Button variant={'ghost'} size={'icon'}>
+                  <Button variant={'ghost'} size={'icon'} className='rounded-none'>
                     <FaGithub className='size-4' />
                   </Button>
                 </Link>
                 <Link href="https://www.linkedin.com/in/joen-tan/">
-                  <Button variant={'ghost'} size={'icon'}>
+                  <Button variant={'ghost'} size={'icon'} className='rounded-none'>
                     <FaLinkedin className='size-4' />
                   </Button>
                 </Link>
@@ -177,25 +161,50 @@ export default function Home() {
             speed={0.62}
           />
           <div ref={chevronRef} className='w-full flex flex-col justify-center items-center gap-6 pt-8'>
-            <p className='justify text-muted-foreground'>
-              I'm deeply passionate about building cool products with extraordinary impact. I strive to build products that are beautiful & functional.
+            <p className='text-justify text-muted-foreground'>
+              I&apos;m deeply passionate about building cool products with extraordinary impact. I strive to build products that are beautiful & functional.
             </p>
-            <p className='text-xs text-muted-foreground flex items-center gap-2 '><ChevronsDownIcon className='size-4' />
+            <Button className="my-auto rounded-none text-xs" variant="ghost" onClick={() => triggerRefs.current[0]?.scrollIntoView({ behavior: 'smooth' })}>
+              <ChevronsDownIcon className='size-4' />
               <Shimmer
                 duration={8}
               >
                 SEE EXPERIENCES
               </Shimmer>
-            </p>
+            </Button>
 
           </div>
-          <div ref={part1DivRef} className='absolute w-full h-1 bg-red-500 mt-8' style={{ opacity: 0 }}></div>
-          <div ref={part2DivRef} className='absolute w-full h-1 bg-blue-500 mt-8' style={{ opacity: 0 }}></div>
+          {/* Render only the active part */}
+          {activePart === 0 && (
+            <div className="absolute w-full mt-8">
+              <Experience onScrollToNext={() => scrollToPart(1)} />
+            </div>
+          )}
+          {activePart === 1 && (
+            <div className="absolute w-full mt-8">
+              <Skills onScrollToNext={() => scrollToPart(2)} />
+            </div>
+          )}
+          {activePart === 2 && (
+            <div className="absolute w-full mt-8">
+              <Projects onScrollToNext={() => scrollToPart(3)} />
+            </div>
+          )}
+          {activePart === 3 && (
+            <div className="absolute w-full mt-8">
+              <Blog onScrollToNext={() => scrollToPart(0)} />
+            </div>
+          )}
         </div>
-        <div ref={triggerPart1Ref} className='h-screen' id="trigger-part-1">
-        </div>
-        <div ref={triggerPart2Ref} className='h-screen' id="trigger-part-2">
-        </div>
+        {/* Render all trigger sections */}
+        {[0, 1, 2, 3].map((index) => (
+          <div
+            key={`part-${index}`}
+            ref={(el) => { triggerRefs.current[index] = el; }}
+            className={cn('h-screen', index === 3 && 'pb-32')}
+            id={`trigger-part-${index}`}
+          />
+        ))}
       </main >
     </div >
   );
