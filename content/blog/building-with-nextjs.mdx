@@ -1,0 +1,61 @@
+export const metadata = {
+  title: "Building with Next.js",
+  description: "Exploring the powerful features of Next.js for modern web development",
+  date: "2026-01-20",
+  image: "https://paper.design/flowers.webp",
+};
+
+# Building with Next.js
+
+Next.js has become my go-to framework for building modern web applications. Let me share why.
+
+## The App Router Revolution
+
+The App Router introduced in Next.js 13 changed everything:
+
+- **Server Components by default** — Better performance out of the box
+- **Nested layouts** — Share UI between routes without re-rendering
+- **Streaming** — Progressive rendering for faster page loads
+
+## Key Features I Love
+
+### File-based Routing
+
+Creating a new page is as simple as adding a file:
+
+```
+app/
+├── page.tsx          # /
+├── blog/
+│   ├── page.tsx      # /blog
+│   └── [slug]/
+│       └── page.tsx  # /blog/:slug
+```
+
+### Server Actions
+
+Handle form submissions without building an API:
+
+```typescript
+async function createPost(formData: FormData) {
+  'use server'
+  const title = formData.get('title')
+  // Save to database
+}
+```
+
+## Performance Tips
+
+Here are some quick wins for better performance:
+
+1. Use `next/image` for automatic image optimization
+2. Leverage static generation when possible
+3. Use dynamic imports for heavy components
+4. Implement proper caching strategies
+
+> The best framework is the one that gets out of your way while giving you superpowers.
+
+---
+
+*What's your favorite Next.js feature? Let me know!*
+

@@ -77,7 +77,7 @@ export default function BlogMarqueeCard({ title, image, dateString }: BlogMarque
                 )}
             </div>
             <div className="flex flex-col gap-0">
-                <p className="text-sm font-mono tracking-tight text-foreground">{title.toUpperCase()}</p>
+                <p className="text-sm font-mono tracking-tight text-foreground line-clamp-1">{title.toUpperCase()}</p>
                 <p className="text-xs font-mono tracking-tight text-muted-foreground">{dateString}</p>
             </div>
         </div>
