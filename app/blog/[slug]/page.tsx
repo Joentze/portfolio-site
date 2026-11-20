@@ -16,32 +16,27 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
     const { slug } = await params;
-    try {
-        const { metadata } = await getPostBySlug(slug);
-        return {
-            title: `${metadata.title} | Joen Tan`,
-            description: metadata.description,
-        };
-    } catch {
+    const result = await getPostBySlug(slug);
+    if (!result) {
         return {
             title: "Post Not Found",
         };
     }
+    return {
+        title: `${result.metadata.title} | Joen Tan`,
+        description: result.metadata.description,
+    };
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
     const { slug } = await params;
 
-    let Post;
-    let metadata;
-
-    try {
-        const result = await getPostBySlug(slug);
-        Post = result.Post;
-        metadata = result.metadata;
-    } catch {
+    const result = await getPostBySlug(slug);
+    if (!result) {
         notFound();
     }
+
+    const { Post, metadata } = result;
 
     return (
         <div className="flex min-h-screen items-center justify-center font-sans dark:bg-black">
@@ -68,7 +63,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                             <p className="text-muted-foreground">{metadata.description}</p>
                         </header>
 
-                        <div className="prose-custom">
+                        <div className="prose-custom text-justify">
                             <Post />
                         </div>
                     </article>

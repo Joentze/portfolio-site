@@ -1,211 +1,321 @@
 "use client";
 
-import { Dithering } from '@paper-design/shaders-react';
-import { useTheme } from 'next-themes';
-import { useIsMobile } from '@/hooks/use-mobile';
-import TypingText from '@/components/ui/typing-text';
-import { ButtonGroup } from '@/components/ui/button-group';
-import { Button } from '@/components/ui/button';
+import { Dithering } from "@paper-design/shaders-react";
+import { Shimmer } from "@/components/ai-elements/shimmer";
+import Blog from "@/components/parts/blog";
+import Experience from "@/components/parts/experience";
+import Skills from "@/components/parts/skills";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import TypingText from "@/components/ui/typing-text";
+import { useIsMobile } from "@/hooks/use-mobile";
+import gsap from "gsap";
+import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+import { ChevronsDownIcon } from "lucide-react";
+import Link from "next/link";
+import { useLayoutEffect, useRef } from "react";
 import { FaGithub, FaLinkedin } from "react-icons/fa6";
-import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ChevronsDownIcon } from 'lucide-react';
-import { Shimmer } from '@/components/ai-elements/shimmer';
-import { cn } from '@/lib/utils';
-import Experience from '@/components/parts/experience';
-import Skills from '@/components/parts/skills';
-import Projects from '@/components/parts/projects';
-import Blog from '@/components/parts/blog';
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollToPlugin);
 
-// Define your parts configuration here
-
+const SECTION_COUNT = 4;
 
 export default function Home() {
-  const isMobile = useIsMobile()
-  const { theme } = useTheme();
-  const ditheringRef = useRef(null);
-  const chevronRef = useRef(null);
-  const [ditheringHeight, setDitheringHeight] = useState(520);
-  const [windowHeight, setWindowHeight] = useState(0);
+  const isMobile = useIsMobile();
+  const mainRef = useRef<HTMLElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const ditherRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<(HTMLElement | null)[]>(
+    Array(SECTION_COUNT).fill(null)
+  );
+  const contentRefs = useRef<(HTMLDivElement | null)[]>(
+    Array(SECTION_COUNT).fill(null)
+  );
+  const activeSectionRef = useRef(0);
+  const scrollTweenRef = useRef<gsap.core.Tween | null>(null);
 
+  const expandedDitherHeight = isMobile ? "50vh" : "42vh";
+  const collapsedDitherHeight = isMobile ? "12vh" : "18.5vh";
 
-  // Create refs dynamically for all parts
-  const triggerRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null]);
-  const [activePart, setActivePart] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
 
-  // Scroll to part function
-  const scrollToPart = (index: number) => {
-    triggerRefs.current[index]?.scrollIntoView({ behavior: 'smooth' });
-  };
-  useEffect(() => {
-    // Set initial window height
-    setWindowHeight(window.innerHeight);
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    let guardingInitialPosition = true;
 
-    // Update window height on resize
-    const handleResize = () => setWindowHeight(window.innerHeight);
-    window.addEventListener('resize', handleResize);
+    const resetToIntro = () => {
+      scroller.scrollTop = 0;
+      activeSectionRef.current = 0;
+    };
 
-    return () => window.removeEventListener('resize', handleResize);
+    const guardAgainstRestoration = () => {
+      if (guardingInitialPosition && scroller.scrollTop !== 0) {
+        resetToIntro();
+      }
+    };
+
+    resetToIntro();
+    scroller.addEventListener("scroll", guardAgainstRestoration);
+    window.addEventListener("pageshow", resetToIntro);
+
+    // Browsers may restore a nested element's scroll position after layout
+    // and after the first frame. Keep section zero locked briefly, then hand
+    // scrolling back to the user.
+    const frame = window.requestAnimationFrame(resetToIntro);
+    const restorationGuard = window.setTimeout(() => {
+      resetToIntro();
+      guardingInitialPosition = false;
+      scroller.removeEventListener("scroll", guardAgainstRestoration);
+    }, 300);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(restorationGuard);
+      window.removeEventListener("pageshow", resetToIntro);
+      scroller.removeEventListener("scroll", guardAgainstRestoration);
+      window.history.scrollRestoration = previousScrollRestoration;
+    };
   }, []);
 
-  useEffect(() => {
-    if (windowHeight === 0) return; // Wait for initial window height
+  const scrollToSection = (index: number) => {
+    const scroller = scrollerRef.current;
+    const target = sectionRefs.current[index];
+    if (!scroller || !target) return;
 
-    // Calculate heights as a ratio of viewport height
-    // Desktop: ~48% of viewport height, Mobile: ~50% of viewport height
-    const initialHeightRatio = isMobile ? 0.5 : 0.42;
-    const minHeightRatio = isMobile ? 0.12 : 0.185;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
-    const initialHeight = Math.round(windowHeight * initialHeightRatio);
-    const minHeight = Math.round(windowHeight * minHeightRatio);
-    setDitheringHeight(initialHeight);
+    scrollTweenRef.current?.kill();
+    gsap.set(scroller, { scrollSnapType: "none" });
 
-    const ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: document.body,
-        start: "top top",
-        end: "+=500",
-        scrub: 1,
-        onUpdate: (self) => {
-          const progress = self.progress;
-          const newHeight = initialHeight - (initialHeight - minHeight) * progress;
-          setDitheringHeight(newHeight);
-        }
-      });
+    const restoreSnap = () => {
+      gsap.set(scroller, { clearProps: "scrollSnapType" });
+    };
 
-      // Fade out chevron on scroll
-      if (chevronRef.current) {
-        gsap.to(chevronRef.current, {
-          opacity: 0,
-          display: "none",
-          scrollTrigger: {
-            trigger: document.body,
-            start: "top top",
-            end: "+=80",
-            scrub: 1,
-          },
-        });
-      }
-
-      // Set up ScrollTriggers for all parts dynamically
-      const partsCount = 4;
-      for (let index = 0; index < partsCount; index++) {
-        const triggerEl = triggerRefs.current[index];
-
-        if (triggerEl) {
-          ScrollTrigger.create({
-            trigger: triggerEl,
-            start: "top center",
-            end: "bottom center",
-            onEnter: () => {
-              setActivePart(index);
-            },
-            onEnterBack: () => {
-              setActivePart(index);
-            },
-            onLeave: () => {
-              setActivePart(null);
-            },
-            onLeaveBack: () => {
-              setActivePart(null);
-            }
-          });
-        }
-      }
+    scrollTweenRef.current = gsap.to(scroller, {
+      scrollTo: {
+        y: target.offsetTop,
+        autoKill: true,
+        onAutoKill: restoreSnap,
+      },
+      duration: reduceMotion ? 0 : 0.55,
+      ease: "power3.inOut",
+      overwrite: "auto",
+      onComplete: restoreSnap,
+      onInterrupt: restoreSnap,
     });
+  };
 
-    return () => ctx.revert();
-  }, [isMobile, windowHeight]);
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current;
+    const dither = ditherRef.current;
+    const sections = sectionRefs.current;
+    const contents = contentRefs.current;
+    if (!scroller || !dither || sections.some((section) => !section)) return;
+
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    let observer: IntersectionObserver | null = null;
+    const ctx = gsap.context(() => {
+      gsap.set(contents.slice(1), { autoAlpha: 0, y: 40 });
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          const visibleEntry = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (!visibleEntry) return;
+
+          const nextIndex = sections.indexOf(
+            visibleEntry.target as HTMLElement
+          );
+          const previousIndex = activeSectionRef.current;
+          if (nextIndex < 0) return;
+
+          if (nextIndex === previousIndex) return;
+
+          const direction = nextIndex > previousIndex ? 1 : -1;
+          const previousContent = contents[previousIndex];
+          const nextContent = contents[nextIndex];
+          activeSectionRef.current = nextIndex;
+
+          if (previousContent) {
+            gsap.to(previousContent, {
+              autoAlpha: 0,
+              y: -24 * direction,
+              duration: reduceMotion ? 0 : 0.2,
+              ease: "power2.out",
+              overwrite: true,
+            });
+          }
+
+          if (nextContent) {
+            gsap.fromTo(
+              nextContent,
+              { autoAlpha: 0, y: 48 * direction },
+              {
+                autoAlpha: 1,
+                y: 0,
+                duration: reduceMotion ? 0 : 0.45,
+                ease: "power3.out",
+                overwrite: true,
+              }
+            );
+          }
+
+          gsap.to(dither, {
+            height:
+              nextIndex === 0
+                ? expandedDitherHeight
+                : collapsedDitherHeight,
+            duration: reduceMotion ? 0 : 0.5,
+            ease: "power3.inOut",
+            overwrite: true,
+          });
+        },
+        {
+          root: scroller,
+          threshold: 0.55,
+        }
+      );
+
+      sections.forEach((section) => {
+        if (section) observer?.observe(section);
+      });
+    }, mainRef);
+
+    return () => {
+      observer?.disconnect();
+      scrollTweenRef.current?.kill();
+      ctx.revert();
+    };
+  }, [collapsedDitherHeight, expandedDitherHeight]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center font-sans dark:bg-black">
-      <main className="flex min-h-screen md:max-w-4xl w-full flex-col items-center justify-between pb-32 px-10 bg-white dark:bg-black sm:items-start relative">
-        <div className='sticky top-0 w-full z-50 bg-white dark:bg-black '>
-          <div className={cn('bottom-0 left-0 w-full flex flex-row items-center py-10 bg-transparent', isMobile ? 'pt-10' : 'pt-16')}>
-            <TypingText
-              finalText="JOEN TAN"
-              className='font-mono text-xl '
-              cursorCharacter='_'
-              text={["JOEN TAN", "SOFTWARE ENGINEER", "AI ENTHUSIAST"]}
-              loop={false}
-
-            />
-            <div className="ml-auto flex">
-              <ButtonGroup>
-                <Link href="https://github.com/joentze">
-                  <Button variant={'ghost'} size={'icon'} className='rounded-none'>
-                    <FaGithub className='size-4' />
-                  </Button>
+    <div className="flex h-dvh items-center justify-center overflow-hidden bg-black font-sans">
+      <main
+        ref={mainRef}
+        className="relative h-dvh w-full overflow-hidden bg-black md:max-w-4xl"
+      >
+        <header className="pointer-events-none absolute left-10 right-10 top-0 z-50 flex items-center bg-black pb-10 pt-16">
+          <TypingText
+            finalText="JOEN TAN"
+            className="font-mono text-xl"
+            cursorCharacter="_"
+            text={["JOEN TAN", "SOFTWARE ENGINEER", "AI ENTHUSIAST"]}
+            loop={false}
+          />
+          <div className="pointer-events-auto ml-auto flex">
+            <ButtonGroup>
+              <Button asChild variant="ghost" size="icon" className="rounded-none">
+                <Link href="https://github.com/joentze" aria-label="Joen Tan on GitHub">
+                  <FaGithub className="size-4" />
                 </Link>
-                <Link href="https://www.linkedin.com/in/joen-tan/">
-                  <Button variant={'ghost'} size={'icon'} className='rounded-none'>
-                    <FaLinkedin className='size-4' />
-                  </Button>
+              </Button>
+              <Button asChild variant="ghost" size="icon" className="rounded-none">
+                <Link
+                  href="https://www.linkedin.com/in/joen-tan/"
+                  aria-label="Joen Tan on LinkedIn"
+                >
+                  <FaLinkedin className="size-4" />
                 </Link>
-              </ButtonGroup>
-            </div>
+              </Button>
+            </ButtonGroup>
           </div>
+        </header>
+
+        <div
+          ref={ditherRef}
+          className="pointer-events-none absolute left-10 right-10 top-36 z-40 h-[50vh] overflow-hidden md:h-[42vh]"
+        >
           <Dithering
-            ref={ditheringRef}
-            width={"100%"}
-            height={ditheringHeight}
-            colorBack={theme === "dark" ? "#000000" : "#F7F7F7"}
-            colorFront={theme === "dark" ? "#EBEBEB" : "#343434"}
+            width="100%"
+            height="100%"
+            colorBack="#000000"
+            colorFront="#FFFFFF"
             shape="warp"
             type="4x4"
             size={2.5}
             speed={0.62}
           />
-          <div ref={chevronRef} className='w-full flex flex-col justify-center items-center gap-6 pt-8'>
-            <p className='text-justify text-muted-foreground'>
-              I&apos;m deeply passionate about building cool products with extraordinary impact. I strive to build products that are beautiful & functional.
-            </p>
-            <Button className="my-auto rounded-none text-xs" variant="ghost" onClick={() => triggerRefs.current[0]?.scrollIntoView({ behavior: 'smooth' })}>
-              <ChevronsDownIcon className='size-4' />
-              <Shimmer
-                duration={8}
-              >
-                SEE EXPERIENCES
-              </Shimmer>
-            </Button>
-
-          </div>
-          {/* Render only the active part */}
-          {activePart === 0 && (
-            <div className="absolute w-full mt-8">
-              <Experience onScrollToNext={() => scrollToPart(1)} />
-            </div>
-          )}
-          {activePart === 1 && (
-            <div className="absolute w-full mt-8">
-              <Skills onScrollToNext={() => scrollToPart(2)} />
-            </div>
-          )}
-          {activePart === 2 && (
-            <div className="absolute w-full mt-8">
-              <Projects onScrollToNext={() => scrollToPart(3)} />
-            </div>
-          )}
-          {activePart === 3 && (
-            <div className="absolute w-full mt-8">
-              <Blog onScrollToNext={() => scrollToPart(0)} />
-            </div>
-          )}
         </div>
-        {/* Render all trigger sections */}
-        {[0, 1, 2, 3].map((index) => (
-          <div
-            key={`part-${index}`}
-            ref={(el) => { triggerRefs.current[index] = el; }}
-            className={cn('h-screen', index === 3 && 'pb-32')}
-            id={`trigger-part-${index}`}
-          />
-        ))}
-      </main >
-    </div >
+
+        <div
+          ref={scrollerRef}
+          className="h-dvh snap-y snap-mandatory overflow-y-auto overscroll-contain"
+          aria-label="Portfolio sections"
+          tabIndex={0}
+        >
+          <section
+            ref={(element) => {
+              sectionRefs.current[0] = element;
+            }}
+            className="relative min-h-dvh snap-start snap-always px-10 pt-[calc(9rem+50vh+2rem)] md:pt-[calc(9rem+42vh+2rem)]"
+            aria-label="Introduction"
+          >
+            <div
+              ref={(element) => {
+                contentRefs.current[0] = element;
+              }}
+              className="flex flex-col items-center gap-6"
+            >
+              <p className="text-justify text-muted-foreground">
+                I&apos;m deeply passionate about building cool products with
+                extraordinary impact. I strive to build products that are
+                beautiful &amp; functional.
+              </p>
+              <Button
+                className="rounded-none text-xs"
+                variant="ghost"
+                onClick={() => scrollToSection(1)}
+              >
+                <ChevronsDownIcon className="size-4" />
+                <Shimmer duration={8}>SEE EXPERIENCES</Shimmer>
+              </Button>
+            </div>
+          </section>
+
+          <section
+            ref={(element) => {
+              sectionRefs.current[1] = element;
+            }}
+            className="relative min-h-dvh snap-start snap-always px-10 pt-[calc(9rem+12vh+2rem)] md:pt-[calc(9rem+18.5vh+2rem)]"
+            aria-label="Experiences"
+          >
+            <div ref={(element) => { contentRefs.current[1] = element; }}>
+              <Experience onScrollToNext={() => scrollToSection(2)} />
+            </div>
+          </section>
+
+          <section
+            ref={(element) => {
+              sectionRefs.current[2] = element;
+            }}
+            className="relative min-h-dvh snap-start snap-always px-10 pt-[calc(9rem+12vh+2rem)] md:pt-[calc(9rem+18.5vh+2rem)]"
+            aria-label="Blog"
+          >
+            <div ref={(element) => { contentRefs.current[2] = element; }}>
+              <Blog onScrollToNext={() => scrollToSection(3)} />
+            </div>
+          </section>
+
+          <section
+            ref={(element) => {
+              sectionRefs.current[3] = element;
+            }}
+            className="relative min-h-dvh snap-start snap-always px-10 pt-[calc(9rem+12vh+2rem)] md:pt-[calc(9rem+18.5vh+2rem)]"
+            aria-label="Skills"
+          >
+            <div ref={(element) => { contentRefs.current[3] = element; }}>
+              <Skills onBackToTop={() => scrollToSection(0)} />
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
   );
 }

@@ -1,4 +1,3 @@
-import { motion } from "motion/react";
 import { HyperText } from "../ui/hyper-text";
 import { Button } from "../ui/button";
 import { ArrowUpRightIcon, ChevronsDownIcon } from "lucide-react";
@@ -36,12 +35,7 @@ export default function Projects({ onScrollToNext }: ProjectsProps) {
         },
     ];
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            exit={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-        >
+        <div>
             <div className="flex flex-row items-center justify-between">
                 <HyperText className="text-xl font-mono tracking-tight font-normal ">PROJECTS</HyperText>
                 <Button className='ml-16 font-mono rounded-none hover:italic' >
@@ -115,6 +109,6 @@ export default function Projects({ onScrollToNext }: ProjectsProps) {
                     <Shimmer duration={8}>READ BLOG</Shimmer>
                 </Button>
             </div>
-        </motion.div>
+        </div>
     )
 }

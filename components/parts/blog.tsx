@@ -1,9 +1,8 @@
-import { motion } from "motion/react";
 import { Button } from "../ui/button";
 import { HyperText } from "../ui/hyper-text";
 import BlogMarqueeCard from "../ui/blog-marquee-card";
 import { Marquee } from "../ui/marquee";
-import { ArrowUpRightIcon, ChevronsUpIcon } from "lucide-react";
+import { ArrowUpRightIcon, ChevronsDownIcon } from "lucide-react";
 import { Shimmer } from "../ai-elements/shimmer";
 import Link from "next/link";
 import { blogPosts } from "@/content/blog";
@@ -13,12 +12,7 @@ interface BlogProps {
 }
 export default function Blog({ onScrollToNext }: BlogProps) {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            transition={{ duration: 0.5 }}
-        >
+        <div>
             <div className="flex flex-row items-center justify-between">
                 <HyperText className="text-xl font-mono tracking-tight font-normal ">BLOG</HyperText>
                 <Link href="/blog">
@@ -53,10 +47,10 @@ export default function Blog({ onScrollToNext }: BlogProps) {
                     className="my-auto rounded-none text-xs"
                     variant="ghost"
                     onClick={onScrollToNext}>
-                    <ChevronsUpIcon className='size-4' />
-                    <Shimmer duration={8}>BACK TO TOP</Shimmer>
+                    <ChevronsDownIcon className='size-4' />
+                    <Shimmer duration={8}>SEE SKILLS</Shimmer>
                 </Button>
             </div>
-        </motion.div>
+        </div>
     )
 }

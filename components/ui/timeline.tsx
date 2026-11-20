@@ -1,74 +1,80 @@
 "use client";
-import { BorderBeam } from './border-beam';
-import { cn } from '@/lib/utils';
+
+import { forwardRef } from "react";
+import { BorderBeam } from "./border-beam";
+import { cn } from "@/lib/utils";
 
 interface TimelineEvent {
-    date: string
-    role: string
-    phase: string
-    description: string
-    completed?: boolean
+  date: string;
+  role: string;
+  phase: string;
+  description: string;
+  completed?: boolean;
 }
 
 interface TimelineProps {
-    className?: string
-    events: TimelineEvent[]
+  className?: string;
+  events: TimelineEvent[];
 }
 
-export function Timeline({ className, events }: TimelineProps) {
+export const Timeline = forwardRef<HTMLDivElement, TimelineProps>(
+  function Timeline({ className, events }, ref) {
     return (
-        <div className={cn(" p-12 overflow-x-auto", className)}>
-            <div className="min-w-screen  mx-auto relative px-12">
-                {/* Timeline Line and Dots */}
-                <div className="relative flex items-center">
-                    {events.map((event, index) => (
-                        <div key={index} className="flex items-center">
-                            {/* Connector Line (Before Dot) */}
-                            {index > 0 && (
-                                <div
-                                    className={`h-1 w-48 bg-black dark:bg-white`}
-                                />
-                            )}
+      <div
+        ref={ref}
+        aria-label="Experience timeline"
+        className={cn(
+          "w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain px-[calc(50%_-_8rem)] py-12 md:px-[calc(50%_-_12rem)]",
+          className
+        )}
+      >
+        <div className="flex w-max items-start" role="list">
+          {events.map((event, index) => (
+            <div
+              key={`${event.date}-${event.phase}`}
+              role="listitem"
+              data-latest={index === events.length - 1 ? "true" : undefined}
+              className="relative flex w-64 shrink-0 snap-center flex-col items-center md:w-96"
+            >
+              {index < events.length - 1 && (
+                <div
+                  aria-hidden="true"
+                  className="absolute left-1/2 top-2.5 h-1 w-full bg-foreground"
+                />
+              )}
 
-                            {/* Dot and Content Container */}
-                            <div className="relative flex flex-col items-center">
-                                {/* Timeline Dot */}
-                                <div className="relative z-10 flex-shrink-0">
-                                    <div
-                                        className={`w-6 h-6 border-6 bg-white border-black dark:bg-foreground dark:border-black'
-}`}
-                                    />
-                                    {!event.completed && <BorderBeam
-                                        size={40}
-                                        initialOffset={20}
-                                        className="from-transparent via-foreground to-transparent rounded-full"
-                                        transition={{
-                                            type: "spring",
-                                            stiffness: 60,
-                                            damping: 20,
-                                        }}
-                                    />}
-                                </div>
+              <div className="relative z-10 shrink-0">
+                <div className="size-6 border-[6px] border-black bg-foreground" />
+                {!event.completed && (
+                  <BorderBeam
+                    size={40}
+                    initialOffset={20}
+                    className="from-transparent via-foreground to-transparent rounded-full"
+                    transition={{
+                      type: "spring",
+                      stiffness: 60,
+                      damping: 20,
+                    }}
+                  />
+                )}
+              </div>
 
-                                {/* Event Details (Positioned absolutely below the dot) */}
-                                <div className="absolute top-10 w-48 text-center">
-                                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">{event.date}</p>
-                                    <h3 className="text-md font-mono mb-1 leading-tight">{event.phase}</h3>
-                                    <p className="text-gray-600 dark:text-gray-500 text-xs leading-relaxed line-clamp-3 justify-center">
-                                        {event.role}
-                                    </p>
-                                    <p className="text-gray-600 dark:text-gray-500 text-xs leading-relaxed line-clamp-3 justify-center">
-                                        {event.description}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-
-                </div>
-                {/* Spacer to ensure absolute content doesn't overflow container height */}
-                <div className="h-32" />
+              <div className="mt-6 w-48 text-center">
+                <p className="mb-1 text-xs text-gray-400">{event.date}</p>
+                <h3 className="mb-1 font-mono text-md leading-tight">
+                  {event.phase}
+                </h3>
+                <p className="line-clamp-3 text-xs leading-relaxed text-gray-500">
+                  {event.role}
+                </p>
+                <p className="line-clamp-3 text-xs leading-relaxed text-gray-500">
+                  {event.description}
+                </p>
+              </div>
             </div>
+          ))}
         </div>
-    )
-}
+      </div>
+    );
+  }
+);

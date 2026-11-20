@@ -9,29 +9,36 @@ export interface BlogPostMeta {
   image: string;
 }
 
+// Add entries here when you create actual MDX files in this directory
+// Example:
+// {
+//   slug: "hello-world",
+//   title: "Hello World",
+//   description: "My first blog post",
+//   date: "2026-01-25",
+//   image: "https://paper.design/flowers.webp",
+// },
 export const blogPosts: BlogPostMeta[] = [
   {
-    slug: "hello-world",
-    title: "Hello World",
-    description: "My first blog post exploring the world of MDX and Next.js",
-    date: "2026-01-25",
-    image: "https://paper.design/flowers.webp",
+    slug: "govtech-llm-systems",
+    title: "Scaling LLM Systems in Government at GovTech Singapore",
+    description: "Developing robust RAG systems for over 1,000 users in a production government environment.",
+    date: "2024-08-20",
+    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=2070",
   },
   {
-    slug: "building-with-nextjs",
-    title: "Building with Next.js",
-    description:
-      "Exploring the powerful features of Next.js for modern web development",
-    date: "2026-01-20",
-    image: "https://paper.design/flowers.webp",
+    slug: "voltade-workflow-systems",
+    title: "Building Real-World Workflow Systems at Voltade",
+    description: "How software decisions directly affect physical operations in pallet manufacturing.",
+    date: "2024-05-15",
+    image: "https://media.licdn.com/dms/image/v2/D560BAQHVYNy_BtuoSg/company-logo_200_200/company-logo_200_200/0/1708142650995/voltade_logo?e=2147483647&v=beta&t=7l3lycqkJpXxqX07URnkXZqkkyZl2WZ627mieSLtalk",
   },
   {
-    slug: "ai-in-software-development",
-    title: "AI in Software Development",
-    description:
-      "How AI tools are transforming the way we write code and build products",
-    date: "2026-01-15",
-    image: "https://paper.design/flowers.webp",
+    slug: "bifrost-ai-foundations",
+    title: "Learning Engineering Foundations at Bifrost AI",
+    description: "Building design systems and CI/CD pipelines to ensure frontend quality and discipline.",
+    date: "2023-12-10",
+    image: "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=1964",
   },
 ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 

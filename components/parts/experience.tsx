@@ -1,9 +1,7 @@
 "use client";
 import { HyperText } from "../ui/hyper-text";
-import { motion } from "framer-motion";
 import { Timeline } from "../ui/timeline";
 import { useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { ArrowUpRightIcon, ChevronsDownIcon } from "lucide-react";
 import { Shimmer } from "../ai-elements/shimmer";
@@ -14,37 +12,33 @@ interface ExperienceProps {
 export default function Experience({ onScrollToNext }: ExperienceProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
-        // Use setTimeout to ensure DOM is fully rendered
-        const timer = setTimeout(() => {
-            if (scrollRef.current) {
-                const container = scrollRef.current;
+        const container = scrollRef.current;
+        if (!container) return;
 
-                // Find all flex items containers (each event is in a flex items-center div)
-                const timelineEvents = container.querySelectorAll('.flex.items-center');
-
-                if (timelineEvents.length > 0) {
-                    // Get the last event element
-                    const lastEvent = timelineEvents[timelineEvents.length - 1] as HTMLElement;
-
-                    // Scroll the last event into view, centered horizontally
-                    lastEvent.scrollIntoView({
-                        behavior: 'instant',
-                        inline: 'center',
-                        block: 'nearest'
-                    });
-                }
+        let isPinnedToLatest = true;
+        const alignLatestExperience = () => {
+            if (isPinnedToLatest) {
+                container.scrollLeft = container.scrollWidth - container.clientWidth;
             }
-        }, 0);
+        };
+        const handleScroll = () => {
+            const maximumScroll = container.scrollWidth - container.clientWidth;
+            isPinnedToLatest = Math.abs(maximumScroll - container.scrollLeft) < 2;
+        };
 
-        return () => clearTimeout(timer);
+        const frame = window.requestAnimationFrame(alignLatestExperience);
+        const resizeObserver = new ResizeObserver(alignLatestExperience);
+        resizeObserver.observe(container);
+        container.addEventListener("scroll", handleScroll, { passive: true });
+
+        return () => {
+            window.cancelAnimationFrame(frame);
+            resizeObserver.disconnect();
+            container.removeEventListener("scroll", handleScroll);
+        };
     }, []);
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            exit={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-        >
+        <div>
             <div className="flex flex-row items-center justify-between">
                 <HyperText className="text-xl font-mono tracking-tight font-normal ">EXPERIENCES</HyperText>
                 <Button className='ml-16 font-mono rounded-none hover:italic' >
@@ -64,9 +58,8 @@ export default function Experience({ onScrollToNext }: ExperienceProps) {
                     className="absolute right-0 top-0 bottom-0 w-32 z-10 pointer-events-none from-black to-transparent bg-gradient-to-l"
                 />
 
-                <div ref={scrollRef} className="overflow-x-scroll">
-                    <Timeline
-                        className={cn("w-full",)}
+                <Timeline
+                        ref={scrollRef}
                         events={[
                             {
                                 date: '04/2022',
@@ -101,7 +94,6 @@ export default function Experience({ onScrollToNext }: ExperienceProps) {
                                 completed: false,
                             }
                         ]} />
-                </div>
 
             </div>
             <div className="flex flex-row items-center justify-center">
@@ -110,9 +102,9 @@ export default function Experience({ onScrollToNext }: ExperienceProps) {
                     variant="ghost"
                     onClick={onScrollToNext}>
                     <ChevronsDownIcon className='size-4' />
-                    <Shimmer duration={8}>SEE SKILLS</Shimmer>
+                    <Shimmer duration={8}>READ BLOG</Shimmer>
                 </Button>
             </div>
-        </motion.div>
+        </div>
     )
 }

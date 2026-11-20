@@ -1,11 +1,10 @@
-import { motion } from "motion/react";
 import { HyperText } from "../ui/hyper-text";
 import { Marquee } from "../ui/marquee";
 import { FaDocker, FaGit, FaNodeJs, FaPython, FaReact } from "react-icons/fa6";
 import { SiAwslambda, SiCloudflare, SiCss3, SiExpress, SiFastapi, SiFlask, SiGooglecloud, SiHono, SiHtml5, SiJavascript, SiMongodb, SiMysql, SiNextdotjs, SiPhp, SiPostgresql, SiPrisma, SiRabbitmq, SiRedis, SiSupabase, SiTailwindcss, SiTypescript, SiVercel } from "react-icons/si";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { Button } from "../ui/button";
-import { ChevronsDownIcon } from "lucide-react";
+import { ChevronsUpIcon } from "lucide-react";
 import { Shimmer } from "../ai-elements/shimmer";
 
 
@@ -150,17 +149,11 @@ const SKILLS: { icon: React.ReactNode, name: string, description: string }[] = [
 ]
 
 interface SkillsProps {
-    onScrollToNext: () => void
+    onBackToTop: () => void
 }
-export default function Skills({ onScrollToNext }: SkillsProps) {
+export default function Skills({ onBackToTop }: SkillsProps) {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            exit={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex flex-col h-96"
-        >
+        <div className="flex flex-col h-96">
             <div className="flex flex-row items-center justify-between">
                 <HyperText className="text-xl font-mono tracking-tight font-normal ">SKILLS</HyperText>
             </div>
@@ -194,15 +187,15 @@ export default function Skills({ onScrollToNext }: SkillsProps) {
                 The following are tools that I&apos;ve worked with across different projects and internship. I&apos;m familiar with wide range of databases, frameworks, languages and cloud platforms. I&apos;m always looking to learn more especially if it means I can build something cool with it.
             </p>
             <div className="flex flex-row items-center justify-center mb-auto">
-                <Button className="my-auto rounded-none text-xs" variant="ghost" onClick={onScrollToNext}>
-                    <ChevronsDownIcon className='size-4' />
+                <Button className="my-auto rounded-none text-xs" variant="ghost" onClick={onBackToTop}>
+                    <ChevronsUpIcon className='size-4' />
                     <Shimmer
                         duration={8}
                     >
-                        SEE PROJECTS
+                        BACK TO TOP
                     </Shimmer>
                 </Button>
             </div>
-        </motion.div>
+        </div>
     )
 }

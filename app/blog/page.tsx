@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAllPosts } from "@/lib/blog";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BlogCard from "@/components/ui/blog-card";
 
@@ -18,12 +18,12 @@ export default function BlogPage() {
         <div className="pt-16">
           <Link href="/">
             <Button variant="ghost" className="rounded-none font-mono text-xs mb-8 -ml-4">
-              <ArrowLeftIcon className="size-4" />
+              <ChevronLeft className="size-4" />
               BACK
             </Button>
           </Link>
 
-          <h1 className="text-4xl font-mono tracking-tight mb-2">BLOG</h1>
+          <h1 className="text-2xl font-mono tracking-tight mb-2">BLOG</h1>
           <p className="text-muted-foreground mb-12">
             Thoughts on software engineering, AI, and building products.
           </p>

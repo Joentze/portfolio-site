@@ -9,10 +9,18 @@ export function getAllPosts(): BlogPostMeta[] {
 
 // Get a single post by slug with its MDX content
 export async function getPostBySlug(slug: string) {
-    const { default: Post, metadata } = await import(
-        `@/content/blog/${slug}.mdx`
-    );
-    return { Post, metadata };
+    // Prevent access to placeholder file
+    if (slug === "_placeholder" || slug.startsWith("_")) {
+        return null;
+    }
+    try {
+        const { default: Post, metadata } = await import(
+            `@/content/blog/${slug}.mdx`
+        );
+        return { Post, metadata };
+    } catch {
+        return null;
+    }
 }
 
 // Get all slugs for static generation
