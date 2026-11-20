@@ -173,8 +173,7 @@ The manifest is sorted newest-first automatically; do not manually implement ord
 - Prefer specific evidence and measured outcomes over broad claims.
 - Keep the description to one sentence; it appears on cards and in search/social metadata.
 - Use headings to break up longer posts. Start body sections at `##`; reserve `#` for unusual in-article needs because the route already provides the page title.
-- Put owned images under `public/blog/<slug>/` and reference them as `/blog/<slug>/<file>`.
-- Remote HTTPS images work because `next.config.ts` currently allows remote hosts, but stable, optimized, locally owned assets are preferred. Do not rely on expiring or access-controlled CDN URLs.
+- Upload owned or user-provided blog photos and other publishable attachments to the public `portfolio` R2 bucket using the workflow below. Do not use signed or expiring third-party image URLs for new posts.
 - Always provide meaningful image alt text in MDX, for example `![Diagram of the ingestion pipeline](/blog/my-post/pipeline.webp)`.
 - Use fenced code blocks for multiline code and inline backticks for identifiers. The shared MDX component map handles presentation.
 - If new MDX elements need special styling, update `mdx-components.tsx` so all posts stay consistent rather than styling one post ad hoc.
@@ -193,3 +192,21 @@ Before handing off frontend changes:
 - For a blog post, confirm the slug, filename, manifest entry, MDX metadata, date, and image path all match.
 
 Make the smallest coherent change that fits these patterns. If a requested design intentionally departs from them, keep the departure local and document the reason in the implementation or handoff.
+
+
+## Blog photo and asset uploads
+
+When creating or updating a blog post, upload any photos, diagrams, covers, or attachments supplied for that post before adding their URLs to the content. If no images are supplied or needed, a text-only post is fine; do not invent photos or copy unrelated third-party images.
+
+- Read the `portfolio-blog-assets` skill at `~/.codex/skills/portfolio-blog-assets/SKILL.md` when available. This section is sufficient if the skill is not installed.
+- The bucket is `portfolio`. Account and public URL live in `blog-assets.json`; keep credentials out of that file and out of Git.
+- Everything uploaded is public. Use assets intended for publication and remove private metadata such as GPS coordinates from photos where appropriate.
+- Optimize images to an appropriate display size, preferably WebP or AVIF. The uploader preserves the input bytes; it does not resize, compress, or strip EXIF metadata.
+- Preview the upload with `bun run blog:upload --dry-run <post-slug> /absolute/path/cover.webp`.
+- Upload with `bun run blog:upload <post-slug> /absolute/path/cover.webp /absolute/path/diagram.png`. Paths containing spaces must be quoted.
+- The script uses the project's pinned Cloudflare CLI. It uses `CLOUDFLARE_API_TOKEN`, an existing cf login, or an unexpired default Wrangler OAuth session. If needed, sign in with `node_modules/.bin/cf auth login`. For a token, use R2 write permissions scoped to the portfolio account and supply it through the environment, never through chat or command arguments.
+- Use the exact verified `url` values printed as JSON. Keys are `blog/<slug>/<filename>-<content-hash>.<extension>`. Changed bytes produce a different URL, avoiding stale cached replacements. Do not rename keys after publishing or delete assets referenced by existing posts.
+- Put the cover URL in BOTH the MDX `metadata.image` and `content/blog/index.ts`. Keep title, description, and date in sync too.
+- For inline images, import `Image` from `next/image` in the MDX file and use `<Image src="https://..." alt="Meaningful description" width={1200} height={800} />` with the real dimensions. The shared Markdown image renderer also uses `next/image`; bare Markdown image syntax does not supply the dimensions it requires.
+- The bucket allows public cross-origin GET/HEAD so the dither shader can load images. The current `r2.dev` origin is rate-limited and intended for development; a production custom domain can replace `publicBaseUrl` once configured and verified. Do not overwrite existing DNS records to attach one.
+- Run lint and a production build after updating post content. Check the resulting article and card, and verify image URLs return the expected content type. Uploading files does not create, edit, or publish a blog post by itself.
