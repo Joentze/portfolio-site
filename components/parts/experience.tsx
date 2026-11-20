@@ -91,6 +91,13 @@ export default function Experience({ onScrollToNext }: ExperienceProps) {
                                 role: 'Software Engineer Intern',
                                 description:
                                     'Teammate, AI Agents',
+                                completed: true,
+                            },
+                            {
+                                date: '08/2026',
+                                phase: 'GOVTECH',
+                                role: 'Software Engineer',
+                                description: '',
                                 completed: false,
                             }
                         ]} />
